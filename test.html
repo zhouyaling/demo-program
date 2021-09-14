@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+
+    <title>glTF 模型</title>
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cc {
+            position: absolute;
+            color: #000000;
+            bottom: 10px;
+            left: 10px;
+        }
+    </style>
+    <script>
+        delete window.AMap;
+    </script>
+</head>
+<body onLoad="mapInit()">
+<div id="container"></div>
+<div class="cc">shanghai city 3D models by Michael Zhang /
+    <a target='_blank' href="http://creativecommons.org/licenses/by/2.0/">CC BY </a>
+</div>
+<script src="http://webapi.amap.com/maps?v=1.4.15&key=3d5688c9436251daf558592ae299f390&plugin=Map3D"></script>
+<script src="http://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+
+<script>
+    function mapInit() {
+        // 创建地图实例
+        var map = new AMap.Map("container", {
+            viewMode: '3D',
+            pitch: 30,
+            rotation: 25,
+            zoom: 16,
+            center: [121.499809, 31.236666],
+            mapStyle: 'amap://styles/macaron',
+            showBuildingBlock:false,
+            showIndoorMap: false
+        });
+
+        // 创建Object3DLayer图层
+        var object3Dlayer = new AMap.Object3DLayer();
+        map.add(object3Dlayer);
+
+        var druckMeshes, cityMeshes;
+
+
+        map.plugin(["AMap.GltfLoader"], function () {
+            var urlCity = 'https://a.amap.com/jsapi_demos/static/gltf-online/shanghai/scene.gltf';
+            // var urlDuck = 'https://a.amap.com/jsapi_demos/static/gltf/Duck.gltf'; 
+            var urlDuck = 'https://staticfile-service.oss-cn-shanghai.aliyuncs.com/Duck/Duck.gltf';
+            var paramCity = {
+                position: new AMap.LngLat(121.510909, 31.233366), // 必须
+                scale: 3580, // 非必须，默认1
+                height: 1800,  // 非必须，默认0
+                scene: 0, // 非必须，默认0
+            };
+
+            /// 
+            var paramDuck = {
+                position: new AMap.LngLat(121.495000, 31.233366), // 必须
+                scale: 800, // 非必须，默认1
+                height: 1000,  // 非必须，默认0
+                scene: 0, // 非必须，默认0
+            };
+
+            var gltfObj = new AMap.GltfLoader();
+
+            gltfObj.load(urlCity, function (gltfCity) {
+                cityMeshes = gltfCity;
+                gltfCity.setOption(paramCity);
+                gltfCity.rotateX(90);
+                gltfCity.rotateZ(120);
+                object3Dlayer.add(gltfCity);
+            });
+
+            gltfObj.load(urlDuck, function (gltfDuck) {
+                druckMeshes = gltfDuck;
+                gltfDuck.setOption(paramDuck);
+                gltfDuck.rotateX(90);
+                gltfDuck.rotateZ(-20);
+                object3Dlayer.add(gltfDuck);
+            });
+
+        });
+
+        // 给gltf模型绑定事件
+        map.on('click', function (ev) {
+            var pixel = ev.pixel;
+            var px = new AMap.Pixel(pixel.x, pixel.y);
+            var obj = map.getObject3DByContainerPos(px, [object3Dlayer], false) || {};
+            if (obj && obj.object) {
+                var meshId = obj.object.id;
+                if(druckMeshes && druckMeshes.layerMesh){
+                    for(var i = 0; i < druckMeshes.layerMesh.length; i++) {
+                        if(meshId === druckMeshes.layerMesh[i].id){
+                            return log.info("您点击了小黄鸭模型！");
+                        }
+                    }
+                }
+
+                if(cityMeshes && cityMeshes.layerMesh){
+                    for(var i = 0; i < cityMeshes.layerMesh.length; i++) {
+                        if(meshId === cityMeshes.layerMesh[i].id){
+                            return log.info("您点击了陆家嘴模型！");
+                        }
+                    }
+                }
+                
+            }
+
+        });
+    }
+</script>
+</body>
+</html>
